@@ -32,5 +32,10 @@ namespace SnakeGame
             if (!(obj is Point)) return false;
             return ((Point)obj).x == this.x && ((Point)obj).y == this.y;
         }
+
+        public bool Equals(int x, int y)
+        {
+            return this.x == x && this.y == y;
+        }
     }
 }

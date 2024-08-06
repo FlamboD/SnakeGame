@@ -9,13 +9,13 @@ namespace SnakeGame
     internal class Settings
     {
         public static int gridWidth = 20;
-        public static int gridHeight = 10;
+        public static int gridHeight = 20;
 
         public static int viewWidth = 10;
         public static int viewHeight = 10;
 
         public static double movesPerSecond = 3;
 
-        public static int fruitOnBoard = 1;
+        public static int fruitOnBoard = 5;
     }
 }

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SnakeGame
 {
@@ -12,10 +8,11 @@ namespace SnakeGame
         Snake snake;
         Direction direction;
         Direction want;
+        int player = -1;
 
         public SnakeController(Snake snake)
         {
-            this.snake = snake.Head;
+            this.snake = snake;
             this.direction = Direction.Right;
             this.want = Direction.Right;
         }
@@ -62,6 +59,8 @@ namespace SnakeGame
             while (true)
             {
                 ConsoleKeyInfo key = Console.ReadKey();
+                if (player == 1 && (new ConsoleKey[] { ConsoleKey.UpArrow, ConsoleKey.RightArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow }).Contains(key.Key)) continue;
+                if (player == 2 && (new ConsoleKey[] { ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D }).Contains(key.Key)) continue;
                 switch(key.Key)
                 {
                     case ConsoleKey.W:
@@ -86,6 +85,11 @@ namespace SnakeGame
                     case ConsoleKey.LeftArrow:
                         {
                             want = Direction.Left;
+                            break;
+                        }
+                    case ConsoleKey.Spacebar:
+                        {
+                            Program.restart();
                             break;
                         }
                 }

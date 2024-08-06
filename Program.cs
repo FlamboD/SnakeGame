@@ -13,10 +13,16 @@ namespace SnakeGame
         static void Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+            Program.restart();
+            // Console.Read();
+            //Console.WriteLine(words.Split());
 
+            // Console.ReadKey();
+        }
+
+        public static void restart() {
             Program.game = new GameController();
             Program.game.start();
-            // Console.Read();
         }
     }
 }

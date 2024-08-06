@@ -1,63 +1,76 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters;
 
 namespace SnakeGame
 {
     internal class Snake
     {
-        Snake head;
+        //Snake head;
+        SnakeData data;
+        public Point Pos { get => this.data.HeadPos; }
+        public bool IsHead { get => this == this.data.Head; }
+        public bool IsDead { get => this.isDead(); }
 
-        public Snake Head { get => this.head; }
-        public Snake Tail { get => getTail(); }
+        // public Snake Head { get => this.head; }
+        // public Snake Tail { get => getTail(); }
 
         Snake toHead;
         Snake toTail;
         Point pos;
+        int index;
 
-        public Snake()
-        {
-            this.head = this;
-            this.pos = new Point(Settings.gridWidth / 2, Settings.gridHeight / 2);
-        }
+        public Snake() : this(new Point(Settings.gridWidth / 2, Settings.gridHeight / 2)) { }
 
         public Snake(Point pos)
         {
-            this.head = this;
             this.pos = pos;
+            this.data = new SnakeData(this);
+            this.index = 0;
         }
 
-        public Snake(Snake prev)
+        private Snake(Snake snake)
         {
-            this.toHead = prev;
-            prev.toTail = this;
-            this.head = prev.head;
-            this.pos = prev.pos;
+            snake.data.Tail.toTail = this;
+            snake.index = snake.data.Tail.index + 1;
+            this.toHead = snake.data.Tail;
+            this.pos = snake.data.TailPos;
+            this.data = snake.data;
+            snake.data.increase(this);
+        }
+
+        public Snake addNode()
+        {
+            return new Snake(this.data.Tail);
         }
 
         public Point GetNextPos(Direction direction) {
-            switch(direction)
+            switch (direction)
             {
-                case Direction.Up: return new Point(this.head.pos.X, this.head.pos.Y-1);
-                case Direction.Right: return new Point(this.head.pos.X+1, this.head.pos.Y);
-                case Direction.Down: return new Point(this.head.pos.X, this.head.pos.Y+1);
-                case Direction.Left: return new Point(this.head.pos.X-1, this.head.pos.Y);
+                case Direction.Up: return new Point(this.data.HeadPos.X, this.data.HeadPos.Y - 1);
+                case Direction.Right: return new Point(this.data.HeadPos.X + 1, this.data.HeadPos.Y);
+                case Direction.Down: return new Point(this.data.HeadPos.X, this.data.HeadPos.Y + 1);
+                case Direction.Left: return new Point(this.data.HeadPos.X - 1, this.data.HeadPos.Y);
             }
-            return this.head.pos;
+            return this.data.HeadPos;
         }
 
-        private Snake getTail()
+        public HashSet<Point> getPoints()
         {
-            Snake curr = this;
-            while (curr.toTail != null)
+            HashSet<Point> points = new HashSet<Point>();
+            Snake curr = this.data.Head;
+            while(curr != null)
             {
+                points.Add(curr.pos);
                 curr = curr.toTail;
             }
-            return curr;
+            return points;
         }
 
         public void move(Point newHeadPos)
         {
-            Snake curr = this.getTail();
-            while(curr.toHead != null)
+            Snake curr = this.data.Tail;
+            while (curr.toHead != null)
             {
                 curr.pos = curr.toHead.pos;
                 curr = curr.toHead;
@@ -67,18 +80,18 @@ namespace SnakeGame
 
         public void move(Direction direction)
         {
-            switch(direction)
+            switch (direction)
             {
-                case Direction.Left: { move(this.head.pos.Left()); break; }
-                case Direction.Up: { move(this.head.pos.Up()); break; }
-                case Direction.Right: { move(this.head.pos.Right()); break; }
-                case Direction.Down: { move(this.head.pos.Down()); break; }
+                case Direction.Left: { move(this.data.HeadPos.Left()); break; }
+                case Direction.Up: { move(this.data.HeadPos.Up()); break; }
+                case Direction.Right: { move(this.data.HeadPos.Right()); break; }
+                case Direction.Down: { move(this.data.HeadPos.Down()); break; }
             }
         }
 
         public Snake isOverPoint(Point pos)
         {
-            Snake curr = this.head;
+            Snake curr = this.data.Head;
             do
             {
                 if (curr.pos.Equals(pos)) return curr;
@@ -88,23 +101,29 @@ namespace SnakeGame
             return null;
         }
 
-        public bool isDead()
+        private bool isDead()
         {
-            Snake curr = this.head;
+            Snake curr = this.data.Head;
+
+            if (
+                this.data.HeadPos.X < 0 ||
+                this.data.HeadPos.X >= Settings.gridWidth ||
+                this.data.HeadPos.Y < 0 ||
+                this.data.HeadPos.Y >= Settings.gridHeight 
+            ) return true;
+
             while (curr.toTail != null)
             {
                 curr = curr.toTail;
-                if(curr == this.head) return true;
+                if (this.data.HeadPos.Equals(curr.pos)) { 
+                    Console.WriteLine(curr.pos);
+                    return true;
+                }
             }
             return false;
         }
 
-        public Snake addNode()
-        {
-            return new Snake(this.Tail);
-        }
 
-        
         Direction getFromHeadDirection()
         {
             if (this.toHead == null) return Direction.Right;
@@ -130,10 +149,10 @@ namespace SnakeGame
 
         public override string ToString()
         {
-            if (this.head == this) return "☺";
-            if (this.Tail == this)
+            if (this.data.Head == this) return "☺";
+            if (this.data.Tail == this)
             {
-                switch(this.getFromHeadDirection())
+                switch (this.getFromHeadDirection())
                 {
                     case Direction.Up: return "↑";
                     case Direction.Right: return "→";
@@ -145,11 +164,11 @@ namespace SnakeGame
             Direction dFromHead = getFromHeadDirection();
             Direction dFromTail = getFromTailDirection();
 
-            switch(dFromHead)
+            switch (dFromHead)
             {
                 case Direction.Up:
                     {
-                        switch(dFromTail)
+                        switch (dFromTail)
                         {
                             case Direction.Up: return "";
                             case Direction.Right: return "┐";
@@ -198,13 +217,36 @@ namespace SnakeGame
         public String whole()
         {
             String s = "";
-            Snake curr = Tail;
-            while(curr != null)
+            Snake curr = this.data.Tail;
+            while (curr != null)
             {
                 s += curr.pos.ToString();
                 curr = curr.toHead;
             }
             return s;
+        }
+
+        internal class SnakeData
+        {
+            internal Snake Head { get; private set; }
+            internal Snake Tail { get; private set; }
+            internal int Length { get; private set; }
+            internal Point HeadPos { get => Head.pos; }
+            internal Point TailPos { get => Tail.pos; }
+
+            internal SnakeData(Snake head)
+            {
+                this.Head = head;
+                this.Tail = head;
+                this.Length = 0;
+            }
+
+            internal int increase(Snake tail)
+            {
+                this.Length += 1;
+                this.Tail = tail;
+                return this.Length;
+            }
         }
     }
 }
