@@ -21,7 +21,7 @@ namespace SnakeGame
         }
 
         public static void restart() {
-            Program.game = new GameController();
+            Program.game = new GameController(true);
             Program.game.start();
         }
     }

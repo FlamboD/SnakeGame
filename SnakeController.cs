@@ -1,14 +1,16 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace SnakeGame
 {
     internal class SnakeController
     {
-        Snake snake;
+        public Snake snake;
         Direction direction;
         Direction want;
-        int player = -1;
+        public int player = -1;
 
         public SnakeController(Snake snake)
         {
@@ -17,11 +19,12 @@ namespace SnakeGame
             this.want = Direction.Right;
         }
 
-        public SnakeController(Snake snake, Direction direction)
+        public SnakeController(Snake snake, Direction direction, int player)
         {
             this.snake = snake;
             this.direction = direction;
             this.want = direction;
+            this.player = player;
         }
 
         public void move()
@@ -54,37 +57,42 @@ namespace SnakeGame
             snake.move(this.want);
         }
 
-        public void bindMovement()
+        public static void bindMovement(List<SnakeController> controllers)
         {
             while (true)
             {
                 ConsoleKeyInfo key = Console.ReadKey();
-                if (player == 1 && (new ConsoleKey[] { ConsoleKey.UpArrow, ConsoleKey.RightArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow }).Contains(key.Key)) continue;
-                if (player == 2 && (new ConsoleKey[] { ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D }).Contains(key.Key)) continue;
+                SnakeController controller = controllers[0];
+                if(controller.player != -1)
+                {
+                    //if ((new ConsoleKey[] { ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D }).Contains(key.Key)) continue;
+                    if ((new ConsoleKey[] { ConsoleKey.UpArrow, ConsoleKey.RightArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow }).Contains(key.Key)) controller = controllers[1];
+                }
+
                 switch(key.Key)
                 {
                     case ConsoleKey.W:
                     case ConsoleKey.UpArrow:
                         {
-                            want = Direction.Up;
+                            controller.want = Direction.Up;
                             break;
                         }
                     case ConsoleKey.D:
                     case ConsoleKey.RightArrow:
                         {
-                            want = Direction.Right;
+                            controller.want = Direction.Right;
                             break;
                         }
                     case ConsoleKey.S:
                     case ConsoleKey.DownArrow:
                         {
-                            want = Direction.Down;
+                            controller.want = Direction.Down;
                             break;
                         }
                     case ConsoleKey.A:
                     case ConsoleKey.LeftArrow:
                         {
-                            want = Direction.Left;
+                            controller.want = Direction.Left;
                             break;
                         }
                     case ConsoleKey.Spacebar:

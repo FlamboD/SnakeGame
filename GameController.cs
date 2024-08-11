@@ -9,8 +9,8 @@ namespace SnakeGame
 {
     internal class GameController
     {
-        List<Snake> snakes = new List<Snake>();
-        List<SnakeController> playerController = new List<SnakeController>();
+        //List<Snake> snakes = new List<Snake>();
+        List<SnakeController> playerControllers = new List<SnakeController>();
         List<Point> fruits = new List<Point>();
         Point midpoint { get => new Point(Settings.gridWidth/2, Settings.gridHeight/2); }
         Point fract(int f) { return new Point(Settings.gridWidth/f, Settings.gridHeight/f); }
@@ -23,16 +23,17 @@ namespace SnakeGame
         public GameController(bool multiplayer)
         {
             if(multiplayer) {
-                Snake s1 = new Snake(new Point(3, 3));
-                this.snakes.Add(s1);
-                Snake s2 = new Snake(new Point(Settings.gridWidth - 3, Settings.gridHeight - 3));
-                this.snakes.Add(s2);
+                this.playerControllers.Add(new SnakeController(new Snake(new Point(2, 2)), Direction.Right, 1));
+                this.playerControllers.Add(new SnakeController(new Snake(new Point(Settings.gridWidth - 3, Settings.gridHeight - 3)), Direction.Left, 2));
+            } else {
+                this.playerControllers.Add(new SnakeController(new Snake(midpoint), Direction.Right, -1));
             }
-            this.snakes.Add(new Snake(midpoint));
-            this.snakes[0].addNode();
-            this.snakes[0].addNode();
 
-            this.playerController.Add(new SnakeController(this.snakes[0], Direction.Right));
+            foreach(SnakeController controller in this.playerControllers) {
+                controller.snake.addNode();
+                controller.snake.addNode();
+            }
+
 
             for (int i = 0; i < Settings.fruitOnBoard; i++)
             {
@@ -44,16 +45,16 @@ namespace SnakeGame
         {
             new Thread(tick).Start();
 
-            this.playerController.bindMovement();
+            SnakeController.bindMovement(this.playerControllers);
         }
 
         public void tick()
         {
             while(playing)
             {
-                this.playerController.move();
+                foreach(SnakeController controller in this.playerControllers) controller.move();
                 this.checkFruitCollision();
-                this.playing = !this.snakes[0].IsDead;
+                this.playing = !this.playerControllers.Any(sc => sc.snake.IsDead);
                 //this.spawnFruit();
 
                 // check collisions
@@ -110,7 +111,7 @@ namespace SnakeGame
         List<Point> getAvailablePoints()
         {
             HashSet<Point> _snake = new HashSet<Point>();
-            this.snakes.ForEach(s => { _snake.UnionWith(s.getPoints()); });
+            this.playerControllers.ForEach(s => { _snake.UnionWith(s.snake.getPoints()); });
 
             HashSet<Point> _fruits = fruits.ToHashSet();
             //for(int i = 0; i < )
@@ -141,7 +142,7 @@ namespace SnakeGame
 
         private T forEachCell<T>(T initialValue, Func<T, int, int, T> eachCell)
         {
-            return forEachCell<T>(initialValue, eachCell, null);
+            return forEachCell(initialValue, eachCell, null);
         }
 
         private Point spawnFruit()
@@ -161,7 +162,10 @@ namespace SnakeGame
             {
                 Point here = new Point(row, col);
                 // BEGIN IF SNAKE
-                Snake s = snakes[0].isOverPoint(here);
+                //Snake s = snakes[0].isOverPoint(here);
+                Snake s = null;
+                foreach(SnakeController controller in this.playerControllers)
+                    if(controller.player != 2) s = controller.snake.isOverPoint(here) ?? s;
                 if (s != null) prev += (s.IsHead ? playing ? "C" : "R" : (row + col) % 2 == 0 ? "B" : "G") + s.ToString();
                 // END IF SNAKE
                 else if (fruits.Contains(here)) prev += "Yó";
@@ -180,12 +184,19 @@ namespace SnakeGame
         }
 
         private bool checkFruitCollision() {
-            Point[] hit = fruits.Where((p) => p.Equals(this.snakes[0].Pos)).ToArray();
-            if (hit.Length == 0) return false;
-            fruits.Remove(hit[0]);
-            this.spawnFruit();
-            this.snakes[0].addNode();
-            return true;
+            bool hitFruit = false;
+            foreach(SnakeController controller in this.playerControllers)
+            {
+                Point[] hit = fruits.Where((p) => p.Equals(controller.snake.Pos)).ToArray();
+                if (hit.Length == 0) {
+                    hitFruit = true;
+                    continue;
+                }
+                fruits.Remove(hit.First());
+                this.spawnFruit();
+                controller.snake.addNode();
+            }
+            return hitFruit;
         }
     }
 }
