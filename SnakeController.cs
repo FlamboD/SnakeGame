@@ -29,7 +29,7 @@ namespace SnakeGame
 
         public void move()
         {
-            switch(this.want)
+            switch (this.want)
             {
                 case Direction.Left:
                     {
@@ -56,6 +56,17 @@ namespace SnakeGame
             this.direction = this.want;
             snake.move(this.want);
         }
+
+        public List<KeyAction> KeyActions => new List<KeyAction> {
+            new KeyAction(ConsoleKey.W, () => { if(player != 2) this.want = Direction.Up; return 0; }),
+            new KeyAction(ConsoleKey.UpArrow, () => { if(player != 1) this.want = Direction.Up; return 0; }),
+            new KeyAction(ConsoleKey.A, () => { if(player != 2) this.want = Direction.Left; return 0; }),
+            new KeyAction(ConsoleKey.LeftArrow, () => { if(player != 1) this.want = Direction.Left; return 0; }),
+            new KeyAction(ConsoleKey.S, () => { if(player != 2) this.want = Direction.Down; return 0; }),
+            new KeyAction(ConsoleKey.DownArrow, () => { if(player != 1) this.want = Direction.Down; return 0; }),
+            new KeyAction(ConsoleKey.D, () => { if(player != 2) this.want = Direction.Right; return 0; }),
+            new KeyAction(ConsoleKey.RightArrow, () => { if(player != 1) this.want = Direction.Right; return 0; }),
+        };
 
         public static void bindMovement(List<SnakeController> controllers)
         {

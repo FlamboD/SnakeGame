@@ -115,8 +115,7 @@ namespace SnakeGame
             while (curr.toTail != null)
             {
                 curr = curr.toTail;
-                if (this.data.HeadPos.Equals(curr.pos)) { 
-                    Console.WriteLine(curr.pos);
+                if (this.data.HeadPos.Equals(curr.pos)) {
                     return true;
                 }
             }

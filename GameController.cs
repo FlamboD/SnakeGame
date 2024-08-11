@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace SnakeGame
 {
-    internal class GameController
+    internal class GameController: Interactable
     {
         //List<Snake> snakes = new List<Snake>();
         List<SnakeController> playerControllers = new List<SnakeController>();
@@ -45,7 +45,12 @@ namespace SnakeGame
         {
             new Thread(tick).Start();
 
-            SnakeController.bindMovement(this.playerControllers);
+            //SnakeController.bindMovement(this.playerControllers);
+        }
+
+        public override void Stop()
+        {
+            this.playing = false;
         }
 
         public void tick()
@@ -60,7 +65,7 @@ namespace SnakeGame
                 // check collisions
                 // reprint board
                 Console.Clear();
-                print(this.display());
+                Display();
 
 
                 Thread.Sleep(Convert.ToInt32(1000/Settings.movesPerSecond));
@@ -68,8 +73,10 @@ namespace SnakeGame
             }
         }
 
-        private void print(String input) {
-            string[] lines = input.Split('\n');
+        public override List<KeyAction> KeyActions => playerControllers.ConvertAll((_) => _.KeyActions).SelectMany(_ => _).ToList();
+
+        public override void Display() {
+            string[] lines = this.ToString().Split('\n');
             for (int i = 0; i < lines.Length; i++) {
                 char[] chars = lines[i].ToCharArray();
                 for(int j = 0; j < chars.Length; j++) {
@@ -154,7 +161,7 @@ namespace SnakeGame
             return fruit;
         }
 
-        public String display()
+        public override String ToString()
         {
             String ret = forEachCell(
                 "", 
