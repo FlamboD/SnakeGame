@@ -18,6 +18,10 @@ namespace SnakeGame
             Console.OutputEncoding = Encoding.UTF8;
             Program.controller = new InputController();
             Program.MainMenu();
+            //GameController.AIGame().start();
+            //foreach (Direction d in Util.DirectionSort(new Point(10, 10), new Point(-11, 11)))
+            //Console.WriteLine(d);
+            Console.ReadKey();
         }
 
         public static void MainMenu() {
@@ -39,11 +43,17 @@ namespace SnakeGame
             Program.game.start();
             Program.controller.control(Program.game, false);
         }
+        public static void AI() {
+            Program.game = GameController.AIGame();
+            Program.game.start();
+            Program.controller.control(Program.game, false);
+        }
 
         public static void restart() {
             Program.game = new GameController(true);
             Program.controller.control(Program.game, false);
             Program.game.start();
         }
+
     }
 }

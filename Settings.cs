@@ -8,8 +8,8 @@ namespace SnakeGame
 {
     internal class Settings
     {
-        public static int gridWidth = 20;
-        public static int gridHeight = 20;
+        public static int gridWidth = 10;
+        public static int gridHeight = 10;
 
         public static double movesPerSecond = 3;
 

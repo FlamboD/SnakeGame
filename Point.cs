@@ -37,5 +37,18 @@ namespace SnakeGame
         {
             return this.x == x && this.y == y;
         }
+
+        public Point NormalDirection(Point to)
+        {
+            int _x = 0, _y = 0;
+
+            if (this.X > to.X) _x = -1;
+            if (this.X < to.X) _x = 1;
+            if (this.Y > to.Y) _y = -1;
+            if (this.Y < to.Y) _y = 1;
+
+            return Math.Abs(_x) > Math.Abs(_y) ? new Point(_x, _y * 2) : new Point(_x * 2, _y);
+            //return new Point(_x, _y);
+        }
     }
 }

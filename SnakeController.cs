@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 
@@ -8,8 +9,8 @@ namespace SnakeGame
     internal class SnakeController
     {
         public Snake snake;
-        Direction direction;
-        Direction want;
+        public Direction direction;
+        public Direction want;
         public int player = -1;
 
         public SnakeController(Snake snake)
@@ -68,51 +69,63 @@ namespace SnakeGame
             new KeyAction(ConsoleKey.RightArrow, () => { if(player != 1) this.want = Direction.Right; return 0; }),
         };
 
-        public static void bindMovement(List<SnakeController> controllers)
+        public Point[] ShortestPathToFruit(Point[] fruits, Direction lastDirection)
         {
-            while (true)
+            Point[] sortedFruits = Util.DistanceSort(this.snake.Pos, fruits);
+            foreach(Point fruit in sortedFruits)
             {
-                ConsoleKeyInfo key = Console.ReadKey();
-                SnakeController controller = controllers[0];
-                if(controller.player != -1)
-                {
-                    //if ((new ConsoleKey[] { ConsoleKey.W, ConsoleKey.A, ConsoleKey.S, ConsoleKey.D }).Contains(key.Key)) continue;
-                    if ((new ConsoleKey[] { ConsoleKey.UpArrow, ConsoleKey.RightArrow, ConsoleKey.DownArrow, ConsoleKey.LeftArrow }).Contains(key.Key)) controller = controllers[1];
-                }
-
-                switch(key.Key)
-                {
-                    case ConsoleKey.W:
-                    case ConsoleKey.UpArrow:
-                        {
-                            controller.want = Direction.Up;
-                            break;
-                        }
-                    case ConsoleKey.D:
-                    case ConsoleKey.RightArrow:
-                        {
-                            controller.want = Direction.Right;
-                            break;
-                        }
-                    case ConsoleKey.S:
-                    case ConsoleKey.DownArrow:
-                        {
-                            controller.want = Direction.Down;
-                            break;
-                        }
-                    case ConsoleKey.A:
-                    case ConsoleKey.LeftArrow:
-                        {
-                            controller.want = Direction.Left;
-                            break;
-                        }
-                    case ConsoleKey.Spacebar:
-                        {
-                            Program.restart();
-                            break;
-                        }
-                }
+                List<Point> path = PathSearch(fruit, lastDirection);
+                if (path != null) return path.ToArray();
             }
+            return null;
+        }
+
+        private List<Point> PathSearch(Point goal, Direction lastDirection)
+        {
+            return this.PathSearch(goal, this.snake.Pos, new List<Point>(), lastDirection);
+        }
+
+        private List<Point> PathSearch(Point goal, Point ghostHead, List<Point> visited, Direction lastDirection)
+        {
+            //Console.WriteLine($"{goal} {snake.Pos}");
+            List<Point> points = new List<Point>(visited);
+            if (ghostHead != snake.Pos) points.Add(ghostHead);
+            if (ghostHead.Equals(goal) && (PathToTail(snake.GetFromTail(points.Count), ghostHead, new List<Point>(), points, lastDirection)?.Count ?? 0) != 0) return points;
+            //if (ghostHead == goal) return visited;
+            Direction[] order = Util.DirectionSort(ghostHead, goal).Where(_ => _ != Util.OppositeDirection(lastDirection)).ToArray();
+            foreach(Direction direction in order)
+            {
+                Point gHead = Util.GetPointInDirection(ghostHead, direction);
+                if (gHead == null) continue;
+                if (gHead.Equals(goal)) return PathSearch(goal, gHead, new List<Point>(points), direction);
+                if (snake.isOverPoint(gHead) != null) continue;
+                if (points.Any(_ => _.Equals(gHead))) continue;
+                List<Point> newPath = PathSearch(goal, gHead, new List<Point>(points), direction);
+                if (newPath != null) return newPath;
+            }
+            return null;
+        }
+
+        private List<Point> PathToTail(Point goal, Point ghostHead, List<Point> visited, List<Point> barriers, Direction lastDirection)
+        {
+            // Excludes PathToTail check
+            // Contains ghost barrier blocks
+            if (goal.Equals(new Point(-1, -1))) return new List<Point> { goal };
+            if (ghostHead != snake.Pos) visited.Add(ghostHead);
+            if (ghostHead == goal) return visited;
+            Direction[] order = Util.DirectionSort(ghostHead, goal).Where(_ => _ != Util.OppositeDirection(lastDirection)).ToArray();
+            foreach (Direction direction in order)
+            {
+                Point gHead = Util.GetPointInDirection(ghostHead, direction);
+                if(gHead == null) continue;
+                if (gHead.Equals(goal)) return visited;
+                if (snake.isOverPoint(gHead) != null) continue;
+                if (visited.Any(_ => _.Equals(ghostHead))) continue;
+                if (barriers.Any(_ => _.Equals(ghostHead))) continue;
+                List<Point> newPath = PathToTail(goal, gHead, new List<Point>(visited), barriers, direction);
+                if (newPath != null) return newPath;
+            }
+            return null;
         }
     }
 }

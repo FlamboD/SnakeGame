@@ -13,10 +13,11 @@ namespace SnakeGame
         List<SnakeController> playerControllers = new List<SnakeController>();
         List<Point> fruits = new List<Point>();
         Point midpoint { get => new Point(Settings.gridWidth/2, Settings.gridHeight/2); }
-        Point fract(int f) { return new Point(Settings.gridWidth/f, Settings.gridHeight/f); }
 
         Random random = new Random();
         bool playing = true;
+        bool isAI = false;
+        List<Direction> pathAI = new List<Direction>();
 
         public GameController() : this(false) { }
 
@@ -34,11 +35,23 @@ namespace SnakeGame
                 controller.snake.addNode();
             }
 
+            //foreach (SnakeController controller in this.playerControllers)
+            //{
+            //    controller.move();
+            //    controller.move();
+            //}
 
             for (int i = 0; i < Settings.fruitOnBoard; i++)
             {
                 this.spawnFruit();
             }
+        }
+
+        public static GameController AIGame()
+        {
+            GameController controller = new GameController();
+            controller.isAI = true;
+            return controller;
         }
 
         public void start()
@@ -57,23 +70,42 @@ namespace SnakeGame
         {
             while(playing)
             {
-                foreach(SnakeController controller in this.playerControllers) controller.move();
+                foreach (SnakeController controller in this.playerControllers) { 
+                    if(isAI)
+                    {
+                        try
+                        {
+
+                            if (pathAI.Count == 0)
+                            {
+                                Point[] shortestPath = controller.ShortestPathToFruit(fruits.ToArray(), controller.direction);
+                                Direction[] directions = shortestPath.Select(_ => Util.PointToDirection(controller.snake.Pos, _)).ToArray();
+                                pathAI.AddRange(directions);
+                            }
+                            if (pathAI.Count != 0)
+                            {
+                                controller.want = pathAI[0];
+                                pathAI.RemoveAt(0);
+                            }
+                        }
+                        catch { }
+                    }
+                    
+                    controller.move(); 
+                }
                 this.checkFruitCollision();
                 this.playing = !this.playerControllers.Any(sc => sc.snake.IsDead);
-                //this.spawnFruit();
 
-                // check collisions
-                // reprint board
+
                 Console.Clear();
                 Display();
 
 
                 Thread.Sleep(Convert.ToInt32(1000/Settings.movesPerSecond));
-                // return;
             }
         }
 
-        public override List<KeyAction> KeyActions => playerControllers.ConvertAll((_) => _.KeyActions).SelectMany(_ => _).ToList();
+        public override List<KeyAction> KeyActions => isAI ? new List<KeyAction>() { new KeyAction(ConsoleKey.Spacebar, () => { Program.AI(); return 0; }) } : playerControllers.ConvertAll((_) => _.KeyActions).SelectMany(_ => _).Concat(new[] { new KeyAction(ConsoleKey.Spacebar, () => { if (this.playerControllers.Count > 1) Program.MultiPlayer(); else Program.SinglePlayer(); return 0; }) }).ToList();
 
         public override void Display() {
             string[] lines = this.ToString().Split('\n');
@@ -122,15 +154,16 @@ namespace SnakeGame
 
             HashSet<Point> _fruits = fruits.ToHashSet();
             //for(int i = 0; i < )
-            return forEachCell(
+            List<Point> availablePoints = forEachCell(
                 new List<Point>(), 
                 (prev, row, col) => {
                     Point here = new Point(row, col);
-                    if(_snake.Contains(here) || _fruits.Contains(here)) return prev;
+                    if(_snake.Any(_ => _.Equals(here)) || _fruits.Any(_ => _.Equals(here))) return prev;
                     prev.Add(here);
                     return prev;
                 }
             );
+            return availablePoints;
         }
 
         private T forEachCell<T>(T initialValue, Func<T, int, int, T> eachCell, Func<T, int, T> eachRow)
@@ -172,7 +205,7 @@ namespace SnakeGame
                 //Snake s = snakes[0].isOverPoint(here);
                 Snake s = null;
                 foreach(SnakeController controller in this.playerControllers)
-                    if(controller.player != 2) s = controller.snake.isOverPoint(here) ?? s;
+                    s = controller.snake.isOverPoint(here) ?? s;
                 if (s != null) prev += (s.IsHead ? playing ? "C" : "R" : (row + col) % 2 == 0 ? "B" : "G") + s.ToString();
                 // END IF SNAKE
                 else if (fruits.Contains(here)) prev += "Yó";

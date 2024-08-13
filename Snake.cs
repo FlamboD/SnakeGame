@@ -91,14 +91,32 @@ namespace SnakeGame
 
         public Snake isOverPoint(Point pos)
         {
+            return this.isOverPoint(pos, 0);
+        }
+
+        public Snake isOverPoint(Point pos, int moved)
+        {
             Snake curr = this.data.Head;
             do
             {
                 if (curr.pos.Equals(pos)) return curr;
                 curr = curr.toTail;
             }
-            while (curr != null);
+            while (curr != null && curr.index < this.data.Length - moved - 1);
             return null;
+        }
+
+        public Point GetFromTail(int count)
+        {
+            int _index = this.data.Length - count;
+            if (_index < 0 || _index > this.data.Length) return new Point(-1, -1);
+            Snake curr = this.data.Tail;
+            while(curr != null)
+            {
+                if (curr.index == _index) return curr.pos;
+                curr = curr.toTail;
+            }
+            return new Point(-1, -1);
         }
 
         private bool isDead()

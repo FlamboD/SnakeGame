@@ -35,7 +35,7 @@ namespace SnakeGame.Menus
                         SettingsMenu.edit(8, 50, _Settings.GridHeight);
                         return 0;
                     })),
-                    new SettingsItem(_Settings.MovesPerSecond, 0.2, 10, new MenuItem($"Moves per turn", () => {
+                    new SettingsItem(_Settings.MovesPerSecond, 0.2, 10, new MenuItem($"Moves per second", () => {
                         SettingsMenu.edit(0.2, 10, _Settings.MovesPerSecond);
                         return 0;
                     })),
@@ -87,7 +87,7 @@ namespace SnakeGame.Menus
             }
         }
 
-        private SettingsMenu(SettingsItem[] items): base(items.Select(_ => _.item).ToArray())
+        private SettingsMenu(SettingsItem[] items): base(items.Select(_ => _.item).Concat(new[] { new MenuItem("Back", () => { Program.MainMenu(); return 0; }) }).ToArray())
         {
             this._items = items;
         }
@@ -95,15 +95,21 @@ namespace SnakeGame.Menus
 
         public override void Display()
         {
-            for (int i = 0; i < this._items.Length; i++)
+            for (int i = 0; i < this.items.Length; i++)
             {
-                SettingsItem curr = this._items[i];
                 if (i == selectedIndex)
                 {
                     Console.BackgroundColor = ConsoleColor.White;
                     Console.ForegroundColor = ConsoleColor.Black;
                 }
-                Console.WriteLine($"{curr.item}: {GetValue(curr._settings)}");
+                if(i < this._items.Length)
+                {
+                    SettingsItem curr = this._items[i];
+                    Console.WriteLine($"{curr.item}: {GetValue(curr._settings)}");
+                } else
+                {
+                    Console.WriteLine(this.items[i]);
+                }
                 Console.ResetColor();
             }
         }

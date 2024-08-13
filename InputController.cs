@@ -25,7 +25,7 @@ namespace SnakeGame
             while(this.obj != null)
             {
                 ConsoleKeyInfo key = Console.ReadKey();
-                Console.WriteLine(ignoreInput);
+                // Console.WriteLine(ignoreInput);
                 if (ignoreInput) continue;
 
                 switch(key.Key)
